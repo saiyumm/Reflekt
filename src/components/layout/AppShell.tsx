@@ -3,16 +3,41 @@ import { useState, useCallback, useEffect } from 'react';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 import { SIDEBAR_KEY } from '@/lib/constants';
-import type { Stats } from '@/types';
+import type { Stats, FilterState, CategoryId } from '@/types';
 import { api } from '@/lib/api';
 
 interface AppShellProps {
   children: ReactNode;
   search: string;
   onSearchChange: (value: string) => void;
+  onNewUpdate: () => void;
+  onDataChanged: () => void;
+  statsKey?: number;
+  // Filter props
+  filters: FilterState;
+  allTags: string[];
+  hasActiveFilters: boolean;
+  onToggleCategory: (c: CategoryId) => void;
+  onToggleTag: (t: string) => void;
+  onSetDateRange: (from: string | null, to: string | null) => void;
+  onClearFilters: () => void;
 }
 
-export function AppShell({ children, search, onSearchChange }: AppShellProps) {
+export function AppShell({
+  children,
+  search,
+  onSearchChange,
+  onNewUpdate,
+  onDataChanged,
+  statsKey = 0,
+  filters,
+  allTags,
+  hasActiveFilters,
+  onToggleCategory,
+  onToggleTag,
+  onSetDateRange,
+  onClearFilters,
+}: AppShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(() => {
     const stored = localStorage.getItem(SIDEBAR_KEY);
     return stored !== 'true'; // default to open
@@ -27,10 +52,10 @@ export function AppShell({ children, search, onSearchChange }: AppShellProps) {
     });
   }, []);
 
-  // Fetch stats on mount
+  // Fetch stats on mount and whenever statsKey changes
   useEffect(() => {
     api.stats.get().then(setStats).catch(console.error);
-  }, []);
+  }, [statsKey]);
 
   return (
     <div className="flex h-screen flex-col">
@@ -39,9 +64,21 @@ export function AppShell({ children, search, onSearchChange }: AppShellProps) {
         onSearchChange={onSearchChange}
         sidebarOpen={sidebarOpen}
         onToggleSidebar={toggleSidebar}
+        onNewUpdate={onNewUpdate}
+        onDataChanged={onDataChanged}
       />
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar open={sidebarOpen} stats={stats} />
+        <Sidebar
+          open={sidebarOpen}
+          stats={stats}
+          filters={filters}
+          allTags={allTags}
+          onToggleCategory={onToggleCategory}
+          onToggleTag={onToggleTag}
+          onSetDateRange={onSetDateRange}
+          onClearFilters={onClearFilters}
+          hasActiveFilters={hasActiveFilters}
+        />
         <main className="flex-1 overflow-y-auto">{children}</main>
       </div>
     </div>

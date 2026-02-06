@@ -29,5 +29,22 @@ export function useUpdates(queryParams?: Record<string, string>) {
     fetchUpdates();
   }, [fetchUpdates]);
 
-  return { updates, loading, error, refresh: fetchUpdates };
+  const createUpdate = useCallback(async (data: Partial<Update>) => {
+    const created = await api.updates.create(data);
+    await fetchUpdates();
+    return created;
+  }, [fetchUpdates]);
+
+  const updateUpdate = useCallback(async (id: string, data: Partial<Update>) => {
+    const updated = await api.updates.update(id, data);
+    await fetchUpdates();
+    return updated;
+  }, [fetchUpdates]);
+
+  const deleteUpdate = useCallback(async (id: string) => {
+    await api.updates.delete(id);
+    await fetchUpdates();
+  }, [fetchUpdates]);
+
+  return { updates, loading, error, refresh: fetchUpdates, createUpdate, updateUpdate, deleteUpdate };
 }
